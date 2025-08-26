@@ -1,8 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Radishmouse
-{
+
     [RequireComponent(typeof(CanvasRenderer))]
     public class UILineRenderer : MaskableGraphic
     {
@@ -11,34 +10,39 @@ namespace Radishmouse
         public float thickness = 10f;
         public bool center = true;
 
+        public Color colorUp;
+
+        public Color colorMid;
+        public Color colorDown;
+
         protected override void OnPopulateMesh(VertexHelper vh)
+    {
+        vh.Clear();
+
+        if (points.Length < 2)
+            return;
+
+        for (int i = 0; i < points.Length - 1; i++)
         {
-            vh.Clear();
+            // Create a line segment between the next two points
+            CreateLineSegment(points[i], points[i + 1], vh, colorUp, colorDown, colorMid);
 
-            if (points.Length < 2)
-                return;
+            int index = i * 5;
 
-            for (int i = 0; i < points.Length - 1; i++)
+            // Add the line segment to the triangles array
+            vh.AddTriangle(index, index + 1, index + 3);
+            vh.AddTriangle(index + 3, index + 2, index);
+
+            // These two triangles create the beveled edges
+            // between line segments using the end point of
+            // the last line segment and the start points of this one
+            if (i != 0)
             {
-                // Create a line segment between the next two points
-                CreateLineSegment(points[i], points[i + 1], vh);
-
-                int index = i * 5;
-
-                // Add the line segment to the triangles array
-                vh.AddTriangle(index, index + 1, index + 3);
-                vh.AddTriangle(index + 3, index + 2, index);
-
-                // These two triangles create the beveled edges
-                // between line segments using the end point of
-                // the last line segment and the start points of this one
-                if (i != 0)
-                {
-                    vh.AddTriangle(index, index - 1, index - 3);
-                    vh.AddTriangle(index + 1, index - 1, index - 2);
-                }
+                vh.AddTriangle(index, index - 1, index - 3);
+                vh.AddTriangle(index + 1, index - 1, index - 2);
             }
         }
+    }
 
         /// <summary>
         /// Creates a rect from two points that acts as a line segment
@@ -46,13 +50,25 @@ namespace Radishmouse
         /// <param name="point1">The starting point of the segment</param>
         /// <param name="point2">The endint point of the segment</param>
         /// <param name="vh">The vertex helper that the segment is added to</param>
-        private void CreateLineSegment(Vector3 point1, Vector3 point2, VertexHelper vh)
+        private void CreateLineSegment(Vector3 point1, Vector3 point2, VertexHelper vh, Color up, Color down, Color mid)
         {
             Vector3 offset = center ? (rectTransform.sizeDelta / 2) : Vector2.zero;
 
             // Create vertex template
             UIVertex vertex = UIVertex.simpleVert;
-            vertex.color = color;
+            if (point1.y == point2.y)
+            {
+                vertex.color = mid;
+            }
+            else if (point1.y > point2.y)
+            {
+                vertex.color = up;
+            }
+            else
+            {
+                vertex.color = down;
+            }
+            //vertex.color = color;
 
             // Create the start of the segment
             Quaternion point1Rotation = Quaternion.Euler(0, 0, RotatePointTowards(point1, point2) + 90);
@@ -88,4 +104,3 @@ namespace Radishmouse
             return (float)(Mathf.Atan2(target.y - vertex.y, target.x - vertex.x) * (180 / Mathf.PI));
         }
     }
-}
