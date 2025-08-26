@@ -60,7 +60,7 @@ using UnityEngine.UI;
             {
                 vertex.color = mid;
             }
-            else if (point1.y > point2.y)
+            else if (point1.y < point2.y)
             {
                 vertex.color = up;
             }
