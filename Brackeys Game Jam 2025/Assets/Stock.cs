@@ -12,7 +12,7 @@ public class Stock : MonoBehaviour
     public TextMeshProUGUI text;
 
 
-    void Start()
+    void UpdateStocks()
     {
         lineRenderer.points = new Vector2[pricePoints.Length];
         for (int point = 0; point < pricePoints.Length; point++)
@@ -20,10 +20,15 @@ public class Stock : MonoBehaviour
             lineRenderer.points[point] = new Vector2(bounds.rect.width / pricePoints.Length * point, bounds.rect.height * (pricePoints[point] / maxValue));
         }
 
-        valueText.position = new Vector3(bounds.position.x - (bounds.rect.width / 2) + bounds.rect.width / pricePoints.Length * (pricePoints.Length - 1) + 30,
+        valueText.position = new Vector3(bounds.position.x - (bounds.rect.width / 2) + bounds.rect.width / pricePoints.Length * (pricePoints.Length - 1) + 50,
         bounds.position.y - (bounds.rect.height / 2) + bounds.rect.height * (pricePoints[pricePoints.Length - 1] / maxValue));
-        
-        text.text = pricePoints[pricePoints.Length - 1].ToString();
+
+        text.text = pricePoints[pricePoints.Length - 1].ToString() + "$";
+    }
+
+    public void Start()
+    {
+        UpdateStocks();
     }
 
 }
