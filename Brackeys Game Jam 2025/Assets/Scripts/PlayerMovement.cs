@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -10,11 +11,18 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask GroundObjects;
     public float CheckRadius;
 
+
     private Rigidbody2D rb;
     private bool FacingRight = true;
     private float MoveDirection;
     private bool IsJumping = false;
     private bool IsGrounded;
+    private bool CanDash = true;
+    private bool IsDashing;
+    private float DashingPower = 24f;
+    private float DashingTime = 0.2f;
+    private float DashingCooldown = 1f;
+    [SerializeField] private TrailRenderer tr;
 
     // Called after objects are intialized. Called in a random order.
     private void Awake()
@@ -30,6 +38,12 @@ public class PlayerMovement : MonoBehaviour
 
         // Animate
         Animate();
+
+        // Makes sure the player can't move while dashing
+        if (IsDashing)
+        {
+            return;
+        }
     }
 
     // Better for handling physics as it can be called multiple times per frame
@@ -37,6 +51,12 @@ public class PlayerMovement : MonoBehaviour
     {
         // Check if grounded
         IsGrounded = Physics2D.OverlapCircle(GroundCheck.position, CheckRadius, GroundObjects);
+
+        // Makes sure the player can't move while dashing
+        if (IsDashing)
+        {
+            return;
+        }
 
         // Move
         Move();
@@ -71,11 +91,31 @@ public class PlayerMovement : MonoBehaviour
         {
             IsJumping = true;
         }
+        if (Input.GetKeyDown(KeyCode.LeftShift) && CanDash)
+        {
+            StartCoroutine(Dash());
+        }
     }
 
     private void FlipCharacter()
     {
         FacingRight = !FacingRight; // Inverse bool
         transform.Rotate(0f, 180f, 0f); // Flips the character lol
+    }
+
+    private IEnumerator Dash()
+    {
+        CanDash = false;
+        IsDashing = true;
+        float OriginalGravity = rb.gravityScale;
+        rb.gravityScale = 0f;
+        rb.linearVelocity = new Vector2(MoveDirection * DashingPower, 0);
+        tr.emitting = true;
+        yield return new WaitForSeconds(DashingTime);
+        tr.emitting = false;
+        rb.gravityScale = OriginalGravity;
+        IsDashing = false;
+        yield return new WaitForSeconds(DashingCooldown);
+        CanDash = true;
     }
 }
